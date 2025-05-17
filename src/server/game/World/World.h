@@ -53,6 +53,7 @@ struct Realm;
 class PreparedResultSet;
 class Field;
 typedef std::shared_ptr<PreparedResultSet> PreparedQueryResult;
+class SQLQueryHolderCallback;
 
 // ServerMessages.dbc
 enum ServerMessageType
@@ -909,6 +910,8 @@ class TC_GAME_API World
         static std::atomic<uint32> m_worldLoopCounter;
 
         WorldSession* FindSession(uint32 id) const;
+        WorldSession* FindOfflineSession(uint32 id) const;
+        WorldSession* FindOfflineSessionForCharacterGUID(uint64 guid) const;
         void AddSession(WorldSession* s);
         void SendAutoBroadcast();
         bool RemoveSession(uint32 id);
@@ -1171,6 +1174,7 @@ class TC_GAME_API World
 
         void RemoveOldCorpses();
 
+        SQLQueryHolderCallback& AddQueryHolderCallback(SQLQueryHolderCallback&& callback);
     protected:
         void _UpdateGameTime();
         // callback for UpdateRealmCharacters
@@ -1215,6 +1219,7 @@ class TC_GAME_API World
         uint32 m_currentTime;
 
         SessionMap m_sessions;
+        SessionMap _offlineSessions;
         typedef std::unordered_map<uint32, time_t> DisconnectMap;
         DisconnectMap m_disconnects;
         uint32 m_maxActiveSessionCount;
@@ -1290,6 +1295,7 @@ class TC_GAME_API World
 
         void ProcessQueryCallbacks();
         QueryCallbackProcessor _queryProcessor;
+        AsyncCallbackProcessor<SQLQueryHolderCallback> _queryHolderProcessor;
 
         uint32 m_minDiff = 0;
         uint32 m_maxDiff = 0;

@@ -54,6 +54,7 @@ GameObject::GameObject() : WorldObject(false), MapObject(),
     m_usetimes = 0;
     m_spellId = 0;
     m_cooldownTime = 0;
+    m_prevGoState = GO_STATE_ACTIVE;
     m_goInfo = NULL;
     m_ritualOwner = NULL;
     m_goData = NULL;
@@ -276,6 +277,7 @@ bool GameObject::Create(ObjectGuid::LowType guidlow, uint32 name_id, Map* map, u
     CreateModel();
     // GAMEOBJECT_FIELD_STATE_SPELL_VISUAL_ID, index at 0, 1, 2 and 3
     SetGoType(GameobjectTypes(goinfo->type));
+    m_prevGoState = go_state;
     SetGoState(go_state);
     SetGoArtKit(artKit);
 
@@ -348,6 +350,11 @@ bool GameObject::Create(ObjectGuid::LowType guidlow, uint32 name_id, Map* map, u
     return true;
 }
 
+void GameObject::AddDelayedEvent(uint64 timeOffset, std::function<void()>&& function)
+{
+    _functions_delayed.AddDelayedEvent(timeOffset, std::move(function));
+}
+
 void GameObject::Update(uint32 diff)
 {
     // WARNING! Order of execution here is important, do not change.
@@ -361,6 +368,8 @@ void GameObject::Update(uint32 diff)
         AI()->UpdateAI(diff);
     else if (!AIM_Initialize())
         TC_LOG_ERROR("misc", "Could not initialize GameObjectAI");
+
+    _functions_delayed.Update(diff);
 
     switch (m_lootState)
     {
@@ -1213,7 +1222,9 @@ void GameObject::ResetDoorOrButton()
     if (m_lootState == GO_READY || m_lootState == GO_JUST_DEACTIVATED)
         return;
 
-    SwitchDoorOrButton(false);
+    RemoveFlag(GAMEOBJECT_FIELD_FLAGS, GO_FLAG_IN_USE);
+    SetGoState(m_prevGoState);
+
     SetLootState(GO_JUST_DEACTIVATED);
     m_cooldownTime = 0;
 }
@@ -1289,7 +1300,7 @@ void GameObject::Use(Unit* user)
         if (sScriptMgr->OnGossipHello(playerUser, this))
             return;
 
-        if (AI()->OnGossipHello(playerUser))
+        if (AI()->OnGossipHello(playerUser, true))
             return;
     }
 

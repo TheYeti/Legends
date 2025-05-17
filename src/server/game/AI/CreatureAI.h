@@ -1,5 +1,5 @@
 /*
-* This file is part of the Pandaria 5.4.8 Project. See THANKS file for Copyright information
+* This file is part of the Legends of Azeroth Pandaria Project. See THANKS file for Copyright information
 *
 * This program is free software; you can redistribute it and/or modify it
 * under the terms of the GNU General Public License as published by the
@@ -80,12 +80,22 @@ class TC_GAME_API CreatureAI : public UnitAI
         Creature* DoSummonFlyer(uint32 entry, WorldObject* obj, float flightZ, float radius = 5.0f, uint32 despawnTime = 30000, TempSummonType summonType = TEMPSUMMON_CORPSE_TIMED_DESPAWN);
 
     public:
-        void Talk(uint8 id, WorldObject const* whisperTarget = nullptr);
-        void TalkToMap(uint8 id, WorldObject const* whisperTarget = nullptr);
+        // EnumUtils: DESCRIBE THIS (in CreatureAI::)
+        enum EvadeReason
+        {
+            EVADE_REASON_NO_HOSTILES,       // the creature's threat list is empty
+            EVADE_REASON_BOUNDARY,          // the creature has moved outside its evade boundary
+            EVADE_REASON_NO_PATH,           // the creature was unable to reach its target for over 5 seconds
+            EVADE_REASON_SEQUENCE_BREAK,    // this is a boss and the pre-requisite encounters for engaging it are not defeated yet
+            EVADE_REASON_OTHER,             // anything else
+        };
 
         explicit CreatureAI(Creature* creature);
 
         virtual ~CreatureAI();
+
+        void Talk(uint8 id, WorldObject const* whisperTarget = nullptr);
+        void TalkToMap(uint8 id, WorldObject const* whisperTarget = nullptr);
 
         /// == Reactions At =================================
 
@@ -126,7 +136,7 @@ class TC_GAME_API CreatureAI : public UnitAI
         virtual void SpellHitTarget(Unit* /*target*/, SpellInfo const* /*spell*/) { }
 
         // Called after spell is casted
-        virtual void SpellCasted(Spell const* spell) { }
+        virtual void SpellCasted(Spell const* /*spell*/) { }
 
         // Called when spellcast was interrupted for any reason
         virtual void CastInterrupted(SpellInfo const* /*spell*/) {}
@@ -208,11 +218,11 @@ class TC_GAME_API CreatureAI : public UnitAI
 
         /// == Fields =======================================
 
-        virtual void PassengerBoarded(Unit* passenger, int8 seatId, bool apply) { }
-        virtual void GetPassengerEnterPosition(Unit* passenger, int8 seatId, Position& pos) { }
-        virtual void GetPassengerExitPosition(Unit* passenger, int8 seatId, Position& pos) { }
-        virtual void BoardedVehicle(Vehicle* vehicle, int8 seatId, bool apply) { }
-        virtual void GetVehicleExitPosition(Vehicle* vehicle, int8 seatId, Position& pos) { }
+        virtual void PassengerBoarded(Unit* /*passenger*/, int8 /*seatId*/, bool /*apply*/) { }
+        virtual void GetPassengerEnterPosition(Unit* /*passenger*/, int8 /*seatId*/, Position& /*pos*/) { }
+        virtual void GetPassengerExitPosition(Unit* /*passenger*/, int8 /*seatId*/, Position& /*pos*/) { }
+        virtual void BoardedVehicle(Vehicle* /*vehicle*/, int8 /*seatId*/, bool /*apply*/) { }
+        virtual void GetVehicleExitPosition(Vehicle* /*vehicle*/, int8 /*seatId*/, Position& /*pos*/) { }
 
         virtual void OnSpellClick(Unit* /*clicker*/, bool& /*result*/) { }
 
@@ -223,7 +233,7 @@ class TC_GAME_API CreatureAI : public UnitAI
         // Object destruction is handled by Unit::RemoveCharmedBy
         virtual PlayerAI* GetAIForCharmedPlayer(Player* /*who*/) { return nullptr; }
 
-        virtual SpellMissInfo SpellHitResult(Unit* /*attacker*/, SpellInfo const* /*spell*/, Spell const* spellInstance = NULL) { return SPELL_MISS_NONE; }
+        virtual SpellMissInfo SpellHitResult(Unit* /*attacker*/, SpellInfo const* /*spell*/, Spell const* spellInstance = nullptr) { return SPELL_MISS_NONE; }
 
         // ONLY FOR PET AI
         virtual void SpellRequiresMovement(Unit* target, Spell* spell);
@@ -287,7 +297,7 @@ struct SummonablePremiumNpcAI : public CreatureAI
 {
     SummonablePremiumNpcAI(Creature* creature, uint32 displayId = 0);
 
-    void UpdateAI(uint32 diff) override { }
+    void UpdateAI(uint32 /*diff*/) override { }
 
     // Just pass a Player* or ChatHandler* instead of this, it will implicitly use the appropriate constructor
     struct PlayerOrChatHandler

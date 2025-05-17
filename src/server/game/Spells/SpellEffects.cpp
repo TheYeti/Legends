@@ -14,7 +14,6 @@
 * You should have received a copy of the GNU General Public License along
 * with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-#include "AccountMgr.h"
 #include "AreaTrigger.h"
 #include "Battleground.h"
 #include "BattlegroundMgr.h"
@@ -25,7 +24,6 @@
 #include "CreatureAI.h"
 #include "DatabaseEnv.h"
 #include "DynamicObject.h"
-#include "Formulas.h"
 #include "GameObject.h"
 #include "GameObjectAI.h"
 #include "GossipDef.h"
@@ -33,7 +31,6 @@
 #include "GridNotifiersImpl.h"
 #include "Group.h"
 #include "Guild.h"
-#include "GuildMgr.h"
 #include "InstanceScript.h"
 #include "Log.h"
 #include "Language.h"
@@ -53,7 +50,6 @@
 #include "ServiceMgr.h"
 #include "SharedDefines.h"
 #include "SkillExtraItems.h"
-#include "SkillDiscovery.h"
 #include "Spell.h"
 #include "SpellAuras.h"
 #include "SpellAuraEffects.h"
@@ -2197,7 +2193,7 @@ void Spell::SendLoot(ObjectGuid guid, LootType loottype)
         if (sScriptMgr->OnGossipHello(player, gameObjTarget))
             return;
 
-        if (gameObjTarget->AI()->OnGossipHello(player))
+        if (gameObjTarget->AI()->OnGossipHello(player, true))
             return;
 
         switch (gameObjTarget->GetGoType())
@@ -6882,16 +6878,7 @@ void Spell::EffectBind(SpellEffIndex effIndex)
     }
 
     player->SetHomebind(homeLoc, areaId);
-
-    // binding
-    WorldPacket data(SMSG_BINDPOINTUPDATE, 4 + 4 + 4 + 4 + 4);
-    data << float(homeLoc.GetPositionX());
-    data << float(homeLoc.GetPositionY());
-    data << float(homeLoc.GetPositionZ());
-    data << uint32(areaId);
-    data << uint32(homeLoc.GetMapId());
-
-    player->SendDirectMessage(&data);
+    player->SendBindPointUpdate();
 
     TC_LOG_DEBUG("spells", "EffectBind: New homebind X: %f, Y: %f, Z: %f, MapId: %u, AreaId: %u",
         homeLoc.GetPositionX(), homeLoc.GetPositionY(), homeLoc.GetPositionZ(), homeLoc.GetMapId(), areaId);
@@ -6899,7 +6886,7 @@ void Spell::EffectBind(SpellEffIndex effIndex)
     ObjectGuid guid = m_caster->GetGUID();
 
     // zone update
-    data.Initialize(SMSG_PLAYERBOUND, 1 + 8 + 4);
+    WorldPacket data(SMSG_PLAYERBOUND, 1 + 8 + 4);
     data.WriteBit(guid[2]);
     data.WriteBit(guid[4]);
     data.WriteBit(guid[0]);

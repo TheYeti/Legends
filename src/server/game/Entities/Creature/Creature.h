@@ -75,6 +75,7 @@ typedef std::unordered_map<uint32, EquipmentInfoContainerInternal> EquipmentInfo
 struct CreatureData
 {
     CreatureData() : dbData(true) { }
+    ObjectGuid::LowType spawnId;
     uint32 id;                                              // entry in creature_template
     uint16 mapId;
     uint32 phaseMask;
@@ -283,7 +284,11 @@ class TC_GAME_API Creature : public Unit, public GridObject<Creature>, public Ma
         bool CanEnterWater() const override;
         bool CanFly()  const override { return GetMovementTemplate().IsFlightAllowed() || IsFlying(); }
         bool CanHover() const { return GetMovementTemplate().Ground == CreatureGroundMovementType::Hover || IsHovering(); } 
-
+        [[nodiscard]] bool HasSwimmingFlagOutOfCombat() const
+        {
+            return !_isMissingSwimmingFlagOutOfCombat;
+        }
+        void RefreshSwimmingFlag(bool recheck = false);
         // Used to dynamically change allowed path generator and movement flags behavior during scripts.
         // Can be used to allow ground-only creatures to temporarily fly, restrict flying creatures to the ground etc.
         void OverrideInhabitType(InhabitTypeValues inhabitType) {  } // todo remove in future 
@@ -308,6 +313,7 @@ class TC_GAME_API Creature : public Unit, public GridObject<Creature>, public Ma
         uint8 GetLevelForTarget(WorldObject const* target) const override; // overwrite Unit::getLevelForTarget for boss level support
 
         bool IsInEvadeMode() const { return HasUnitState(UNIT_STATE_EVADE); }
+        bool IsEvadingAttacks() const { return IsInEvadeMode() || CanNotReachTarget(); }
 
         bool AIM_Initialize(CreatureAI* ai = NULL);
         void Motion_Initialize();
@@ -493,6 +499,9 @@ class TC_GAME_API Creature : public Unit, public GridObject<Creature>, public Ma
         virtual uint8 GetPetAutoSpellSize() const { return MAX_SPELL_CHARM; }
         virtual uint32 GetPetAutoSpellOnPos(uint8 pos) const;
 
+        void SetCannotReachTarget(bool cannotReach);
+        bool CanNotReachTarget() const { return m_cannotReachTarget; }
+
         void SetPosition(float x, float y, float z, float o);
         void SetPosition(const Position &pos) { SetPosition(pos.GetPositionX(), pos.GetPositionY(), pos.GetPositionZ(), pos.GetOrientation()); }
 
@@ -592,10 +601,14 @@ class TC_GAME_API Creature : public Unit, public GridObject<Creature>, public Ma
 
         bool m_AlreadyCallAssistance;
         bool m_AlreadySearchedAssistance;
+        bool m_cannotReachTarget;
+        uint32 m_cannotReachTimer;
+        
         bool m_regenHealth;
         bool m_regenMana = true;
         bool m_AI_locked;
         bool m_hasNormalLootMode = true;
+        bool _isMissingSwimmingFlagOutOfCombat;
 
         SpellSchoolMask m_meleeDamageSchoolMask;
         uint32 m_originalEntry;

@@ -25,7 +25,6 @@
 #include "ObjectMgr.h"
 #include "ScriptMgr.h"
 #include "Opcodes.h"
-#include "WorldSession.h"
 #include "Language.h"
 
 uint32 ReputationRankStrIndex(ReputationRank rank)

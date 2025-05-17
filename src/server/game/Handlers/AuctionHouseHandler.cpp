@@ -28,7 +28,6 @@
 #include "Opcodes.h"
 #include "UpdateMask.h"
 #include "Util.h"
-#include "AccountMgr.h"
 #include "ServiceMgr.h"
 
 //void called when player click on auctioneer npc
@@ -1078,13 +1077,13 @@ void WorldSession::HandleReplicateItems(WorldPackets::AuctionHouse::AuctionRepli
     if (GetPlayer()->HasUnitState(UNIT_STATE_DIED))
         GetPlayer()->RemoveAurasByType(SPELL_AURA_FEIGN_DEATH);
 
-//    AuctionHouseObject* auctionHouse = sAuctionMgr->GetAuctionsMap(creature->GetFaction());
-//
-//    WorldPackets::AuctionHouse::AuctionReplicateResponse response;
-//
-//    auctionHouse->BuildReplicate(response, GetPlayer(), packet.ChangeNumberGlobal, packet.ChangeNumberCursor, packet.ChangeNumberTombstone, packet.Count);
-//
-//    response.DesiredDelay = sWorld->getIntConfig(CONFIG_AUCTION_SEARCH_DELAY) * 5;
-//    response.Result = 0;
-//    SendPacket(response.Write());
+    AuctionHouseObject* auctionHouse = sAuctionMgr->GetAuctionsMap(creature->GetFaction());
+
+    WorldPackets::AuctionHouse::AuctionReplicateResponse response;
+
+    auctionHouse->BuildReplicate(response, GetPlayer(), packet.ChangeNumberGlobal, packet.ChangeNumberCursor, packet.ChangeNumberTombstone, packet.Count);
+
+    response.DesiredDelay = sWorld->getIntConfig(CONFIG_AUCTION_SEARCH_DELAY) * 5;
+    response.Result = 0;
+    SendPacket(response.Write());
 }

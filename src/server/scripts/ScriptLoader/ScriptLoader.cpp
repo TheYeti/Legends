@@ -1863,6 +1863,13 @@ void AddMaelstromScripts()
 #endif
 }
 
+#ifdef USE_MODULES
+
+extern void AddModulesScripts();
+
+#endif // USE_MODULES
+
+
 void AddEventScripts()
 {
 #ifdef SCRIPTS
@@ -2147,6 +2154,10 @@ void AddCustomScripts()
 	AddSC_solocraft_system();
 #endif
     AddSC_Anticheat();
+
+#ifdef USE_MODULES
+    AddModulesScripts();
+#endif // USE_MODULES
 }
 
 void AddScripts()
